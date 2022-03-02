@@ -37,10 +37,15 @@ void display_debug( volatile int * const addr );
 
 /* Declare bitmap array containing font */
 extern const uint8_t const font[128*8];
-/* Declare bitmap array containing icon */
-extern const uint8_t const icon[128];
+/* Declare bitmap array containing the game board */
+extern uint8_t gameboard[512];
+/* Used for clearing the gameboard */
+extern uint8_t clear_gameboard[512];
+/* Array for the  pixels of the snake */
+//extern uint8_t snake[128 * 32];
 /* Declare text buffer for display output */
 extern char textbuffer[4][16];
+
 
 /* Declare functions written by students.
    Note: Since we declare these functions here,

@@ -8,14 +8,14 @@ int getsw(void){
 	return SW;
 }
 
-int getbtn1(void){
-	int button1 = (PORTF & 0x2);
-	
-	return button1;
-}
-
 int getbtns(void){
-	int BTN = (PORTD >> 5) & 0x7; // get three LSB
+	int BTN = ((PORTD >> 5) & 0x7); 
 
 	return BTN;
+}
+
+int getbtn1(void){
+	int btn1 = (PORTF & 0x2);
+
+	return btn1;
 }

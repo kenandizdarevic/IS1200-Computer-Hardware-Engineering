@@ -57,14 +57,11 @@ int main(void) {
 	display_init();
 	display_update();
 	
-	display_image(0, icon);
-
-	
 	labinit(); /* Do any lab-specific initialization */
 
-	//while( 1 )
-	//{
-	  //snake(); /* Runs the main game loop */
-	//}
+	while( 1 )
+	{
+	  snake(); /* Runs the main game loop */
+	}
 	return 0;
 }
