@@ -1,21 +1,12 @@
+#include <stdio.h>
 #include <stdint.h>
 #include <pic32mx.h>
 #include "mipslab.h"
 
-int getsw(void){
-	int SW = (PORTD >> 8) & 0xf; // get four LSB
-
-	return SW;
+int getsw( void ){
+    return (PORTD &= 0xF00)>>8;
 }
 
-int getbtns(void){
-	int BTN = ((PORTD >> 5) & 0x7); 
-
-	return BTN;
-}
-
-int getbtn1(void){
-	int btn1 = (PORTF & 0x2);
-
-	return btn1;
+int getbtns( void ){
+    return ((PORTD &= 0xE0)>>4 | (PORTF &= 0x2)>>1);
 }

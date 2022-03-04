@@ -159,29 +159,74 @@ void display_image(int x, const uint8_t *data) {
 			spi_send_recv(~data[i*128 + j]);
 	}
 }
+//Updates the "pixel" array
+void display_update(){
+    int x, y, k, value;
+    for(y = 0; y < 4; y++){
+        DISPLAY_CHANGE_TO_COMMAND_MODE;
+        spi_send_recv(0x22);
+        spi_send_recv(y);
 
-void display_update(void) {
-	int i, j, k;
-	int c;
-	for(i = 0; i < 4; i++) {
-		DISPLAY_CHANGE_TO_COMMAND_MODE;
-		spi_send_recv(0x22);
-		spi_send_recv(i);
-		
-		spi_send_recv(0x0);
-		spi_send_recv(0x10);
-		
-		DISPLAY_CHANGE_TO_DATA_MODE;
-		
-		for(j = 0; j < 16; j++) {
-			c = textbuffer[i][j];
-			if(c & 0x80)
-				continue;
-			
-			for(k = 0; k < 8; k++)
-				spi_send_recv(font[c*8 + k]);
-		}
-	}
+        spi_send_recv(0x00);
+        spi_send_recv(0x10);
+
+        DISPLAY_CHANGE_TO_DATA_MODE;
+
+        for(x = 0; x < 128; x++){
+            value = (pixel[y * 8][x]);
+            for(k = 1; k < 8; k++){
+                value |= (pixel[y * 8 + k][x]) << k;
+            }
+            spi_send_recv(value);
+        }
+    }
+}
+// Updatest the "bombs" array
+void display_update_bombs(){
+    int x, y, k, value;
+    for(y = 0; y < 4; y++){
+        DISPLAY_CHANGE_TO_COMMAND_MODE;
+        spi_send_recv(0x22);
+        spi_send_recv(y);
+
+        spi_send_recv(0x00);
+        spi_send_recv(0x10);
+
+        DISPLAY_CHANGE_TO_DATA_MODE;
+
+        for(x = 0; x < 128; x++){
+            value = (bombs[y * 8][x]);
+            for(k = 1; k < 8; k++){
+                value |= (bombs[y * 8 + k][x]) << k;
+            }
+            spi_send_recv(value);
+        }
+    }
+}
+
+//Updates the start and gameover menu
+void display_update_menu(void) {
+  int i, j, k;
+  int c;
+  for(i = 0; i < 4; i++) {
+    DISPLAY_CHANGE_TO_COMMAND_MODE;
+    spi_send_recv(0x22);
+    spi_send_recv(i);
+    
+    spi_send_recv(0x0);
+    spi_send_recv(0x10);
+    
+    DISPLAY_CHANGE_TO_DATA_MODE;
+    
+    for(j = 0; j < 16; j++) {
+      c = textbuffer[i][j];
+      if(c & 0x80)
+        continue;
+      
+      for(k = 0; k < 8; k++)
+        spi_send_recv(font[c*8 + k]);
+    }
+  }
 }
 
 /* Helper function, local to this file.

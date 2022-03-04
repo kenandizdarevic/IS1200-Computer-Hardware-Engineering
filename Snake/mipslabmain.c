@@ -55,13 +55,25 @@ int main(void) {
 	SPI2CONSET = 0x8000;
 	
 	display_init();
-	display_update();
+
+    display_string(0, "BOMB DODGER!");
+	display_string(2, "Press BTN1 to");
+  	display_string(3, "PLAY ");
+ 	display_update_menu();
 	
 	labinit(); /* Do any lab-specific initialization */
 
 	while( 1 )
 	{
-	  snake(); /* Runs the main game loop */
+		labinit(); /*Do any lab-specific initialization */
+		if(getbtns() & 0x1){
+			gameStarted = 0;
+			while(gameStarted == 0)
+			{
+		  		game(); /* Runs the main game loop */
+			}
+			blown_up();
+		}
 	}
 	return 0;
 }

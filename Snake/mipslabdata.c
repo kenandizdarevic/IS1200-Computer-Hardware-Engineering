@@ -10,6 +10,9 @@
 
 char textbuffer[4][16];
 
+uint8_t pixel[32][128];
+uint8_t bombs [32][128];
+
 const uint8_t const font[] = {
 	0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0,

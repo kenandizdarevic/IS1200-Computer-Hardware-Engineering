@@ -13,149 +13,235 @@
 #include <stdint.h>   /* Declarations of uint_32 and the like */
 #include <pic32mx.h>  /* Declarations of system-specific addresses etc */
 #include "mipslab.h"  /* Declatations for these labs */
-#include <stdlib.h>
 #include <stdio.h>
-#include "displaysetup.h"
+#include <stdlib.h>
 
-       
-int gameStarted = 0;
-int snakeX = 15;
-int snakeY = 15;
-int foodX = 30;
-int foodY = 30;
-int score = 0;
-int speed = 0;
+int i,j;
+int direction = 4;
 
-void resetGame(){
-  int gameStarted = 0;
-  int snakeX = 15;
-  int snakeY = 15;
-  int foodX = 30;
-  int foodY = 30;
-  int score = 0;
-  int speed = 0;
-}
+int blobY;
+int blobX;
+int bombX;
+int bombY;
+int score;       
+
+int timeoutcount;
 
 /* Interrupt Service Routine */
 void user_isr( void )
 {
   return;
 }
+void clear_screen(){
+    for(i = 0; i < 32; i++)
+        for(j = 0; j < 128; j++)
+          if(!bombs[i][j] && pixel[i][j]){
+              pixel[i][j] = 0;
+          }
+}
+
+void save_pixel(){
+  for(i = 0; i < 32; i++)
+    for(j = 0; j < 128; j++)
+      if(bombs[i][j]){
+        pixel[i][j] = 1;
+  }
+}
 
 /* Lab-specific initialization goes here */
 void labinit( void ){
-  TRISF &= 0x2;
-  TRISD &= 0x0070;
- 
- /* TIMER */
-  PR2 = ((80000000/256)/10);    
-  TMR2 = 0;                     
-  T2CON = 0x8070;            
+    TRISD &= 0xfe0;
+    
+    //Timer
+    T2CON = 0x0;    
+    TMR2 = 0x0;     
+    PR2 = 0x7a12;   
+    T2CONSET = 0x8070;
+    
+    IFSCLR(0);      
+    
+    IEC(0) = IEC(0) | 0x100;
+    IPC(2) = IPC(2) | 0x1F;
+    
+    i=0;
+    j=0;
+
+    direction = 4;
+
+    blobY = 16;
+    blobX = 64;
+
+    timeoutcount = 0;
+
   return;
 }
 
-
-  uint8_t game[128*32] = {0}; 
-
-  void clear(){    
-   int i;     
-    for (i = 0; i < sizeof(game); i++){ 
-      game[i] = 0; 
-    } 
-  } 
-
-  void displayScreen(uint8_t arr[]) {     
-    int i, j;     
-    for(i = 0; i < 4; i++)     {         
-      DISPLAY_COMMAND_DATA_PORT &= ~DISPLAY_COMMAND_DATA_MASK;         
-      spi_send_recv(0x22);         
-      spi_send_recv(i);         
-      spi_send_recv(0 & 0xF);         
-      spi_send_recv(0x10 | ((0 >> 4) & 0xF));         
-      DISPLAY_COMMAND_DATA_PORT |= DISPLAY_COMMAND_DATA_MASK;         
-      for(j = 0; j < 128; j++)             
-        spi_send_recv(arr[i*128 + j]);     
-   } 
- }    
-
-void set_pixel(int x, int y){
-  short offset = 0;
-  if(y > 0){
-    offset = y / 8;
-  }
-  game[offset * 128 + x] |= 1 << (y - offset * 8);
-}
-
 void move_right(){
-  snakeX++;
-  speed = 1;
+  blobX++;
 }
 void move_up(){
-  snakeY--;
-  speed = 32;
+  blobY--;
 }
 void move_down(){
-  snakeY++;
-  speed = -32;
+  blobY++;
 }
 void move_left(){
-  snakeX--;
-  
+  blobX--;
 }
 
-void movement(){
-  clear();
-  int button = getbtns();
-  int button1 = getbtn1();
-  if(button){
-    if(button == 4){
-     move_left();
+void set_direction(int n){
+    switch (n) {
+        case 1:
+            move_left();
+            break;
+        case 2:
+            move_down();
+            break;
+        case 3:
+            move_up();
+            break;
+        case 4:
+            move_right();
+            break;
+            
+        default:
+            break;
     }
-    if(button & 1){
-      move_up();
-    }
-    if(button & 2){
-      move_down();
-    }
+}
+
+void airstrike(bombX,bombY){
+    int x = bombX;
+    int y = bombY;
+    bombs[x][y] = 1; 
+}
+// Checks if blob has hit bomb or frame
+void gameover(){
+  if(blobY < 0 || blobY > 31 || blobX < 0 || blobX > 127){
+    gameStarted = 2;
   }
-  if(button1){
-    move_right();
+  for(i = 0; i < 32; i++){
+    for(j = 0; j < 128; j++){
+      if(bombs[i][j]){
+        if((i == blobY && j == blobX) || (i == blobY+1 && j == blobX) || (i == blobY+2 && j == blobX)
+          || (i == blobY && j == blobX+1) || (i == blobY+1 && j == blobX+1) || (i == blobY+2 && j == blobX+1)
+          || (i == blobY && j == blobX+2) || (i == blobY + 1 && j == blobX+2) || (i == blobY+2 && j == blobX+2)){
+          gameStarted = 2;
+        }
+      }
+    }
   }
 }
 
+// Sets the blob
+void player(blobY,blobX){
+    pixel[blobY][blobX] = 1;
+    pixel[blobY][blobX+1] = 1;
+    pixel[blobY][blobX+2] = 1;
+    
+    pixel[blobY+1][blobX] = 1;
+    pixel[blobY+1][blobX+1] = 1;
+    pixel[blobY+1][blobX+2] = 1;
+    
+    pixel[blobY+2][blobX] = 1;
+    pixel[blobY+2][blobX+1] = 1;
+    pixel[blobY+2][blobX+2] = 1;
+}
 
-void food(){
-  set_pixel(foodX, foodY);
+// Spawns the bombs and increases the score
+void spawn_bomb(){
+  bombX = ((TMR2) % 28) + 2;
+  bombY = ((TMR2) % 124) + 2;
+
+  airstrike(bombX,bombY);
   score++;
 }
 
-void startup_screen(){
-  display_update();
-  display_string(0, "SNAKE");
-  display_string(2, "Press BTN1 to");
-  display_string(3, "PLAY ");
- 
- int button1 = getbtn1();
-  if(button1){
-    gameStarted = 1;
+//Used to reset the game when gameover
+void clear_bomb(){
+    for(i = 0; i < 32; i++)
+        for(j = 0; j < 128; j++)
+            bombs[i][j] = 0;
+}
+
+//Draws the frame
+void frame(){
+  //Vertical
+  for(i = 0; i < 32; i++){
+      pixel[i][0] = 1;
+      pixel[i][127] = 1;
   }
+  //Horizontal
+  for(j = 0; j < 128; j++){
+      pixel[0][j] = 1;
+      pixel[31][j] = 1;
+  }
+}
+//Used to reset the values and clear the screen when dead
+void restart(){
+  direction = 4;
+  blobY = 16;
+  blobX = 12;
+  bombX = ((TMR2) % 28) + 2;
+  bombY = ((TMR2) % 124) + 2;
+  score = 1; 
+  clear_screen();
+  clear_bomb();
+}
+//Displays when gameover
+void blown_up(){
+  clear_screen();
+  display_string(0, "    BLOWN UP!");
+  display_string(1, "Score: ");
+  display_string(2, itoaconv(score));
+  display_string(3, "BTN1 to PLAY!");
+  restart();
+  display_update_menu();
 }
 
 
-
 /* This function is called repetitively from the main program */
-void snake( void )
+void game( void )
 {
-  if(!gameStarted){
-    startup_screen();
-  }
-  if(gameStarted){
-    delay(50);
-    movement();
-    food();
-    set_pixel(snakeX, snakeY);
-  
-    displayScreen(game);
-  
-  }
+    //Controls updatespeed
+    delay(100);
+    //Clears the Display
+    clear_screen();
+    //Draws frame
+    frame();
+    //Draw bomb
+    airstrike(bombX,bombY);
+    //Draw snake
+    player(blobY,blobX);    
+    //Snake Movement
+    //Left
+    int btnstate = getbtns();
+    if(btnstate & 0x8 && direction != 4)
+        direction = 1;
+    //Down
+    else if(btnstate & 0x4 && direction != 3)
+        direction = 2;
+    //Up
+    else if(btnstate & 0x2 && direction != 2)
+        direction = 3;
+    //Right
+    else if(btnstate & 0x1 && direction != 1)
+        direction = 4;
+    //Set direction of the Snake
+    set_direction(direction);
+    //Gameover
+    gameover();
+    //Update the display
+    save_pixel();
+    display_update();
+    //Interruption flag for spawning the bombs
+   if(IFS(0) & 0x0100){ 
+      IFS(0) = IFS(0) & 0xfffffeff;  
+      timeoutcount++; 
+    }
+
+    if(timeoutcount == 20){
+        spawn_bomb();
+        timeoutcount = 0;
+      }
+    
 }
