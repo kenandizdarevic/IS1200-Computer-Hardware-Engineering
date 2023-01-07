@@ -6,4 +6,4 @@ In the game, you play as the player character and must navigate through the game
 
 To play the game, you will need a PIC32MX chipKIT microcontroller and the necessary hardware to connect it to a display. Once everything is set up, you can load the game onto the microcontroller and start playing.
 
-We hope you have fun playing Bomb Dodger! If you encounter any issues or have suggestions for improvements, please don't hesitate to let us know.
+We hope you have fun playing Bomb Dodger! If you encounter any issues or have suggestions for improvements, please don't hesitate to let me know.
