@@ -1,4 +1,6 @@
 # IS1200 Computer Hardware Engineering
+![C](https://img.shields.io/badge/c-%2300599C.svg?style=for-the-badge&logo=c&logoColor=white)
+
 The course gives basic knowledge of how a computer functions and is built-up both from a hardware and from a software perspective The course is divided into six different modules, which for example include the following basic concepts:
 
 C-programming and assembler language: pointers, functions, stack, assembly language, machine language, instruction encoding and processor registers.
